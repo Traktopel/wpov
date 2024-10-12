@@ -35,7 +35,9 @@
     mode: u=rw,g=r,o=r
 
 - name: add iam-role-user
-  ansible.builtin.command: mongosh < /tmp/create-user.js
+  ansible.builtin.shell: mongosh < /tmp/create-user.js
+  args:
+    executable: /bin/bash
 
 - name: reconfigure mongodb
   ansible.builtin.copy:
