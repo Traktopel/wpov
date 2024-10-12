@@ -1,3 +1,42 @@
+resource "aws_iam_instance_profile" "database_profile" {
+  name = "database_profile"
+  role = aws_iam_role.database_role.name
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "inline_policy" {
+  statement {
+    actions = ["ec2:*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role" "database_role" {
+  name               = "database_role"
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  inline_policy {
+    name = "inline_policy"
+    policy = data.aws_iam_policy_document.inline_policy.json
+  }
+}
+
+
+
+
+
 resource "aws_default_vpc" "default" {
   tags = {
     Name = "Default VPC"
@@ -22,7 +61,7 @@ resource "local_file" "ssh_key" {
 }
 
 resource "aws_security_group" "database_sg" {
-  name        = "allow_http"
+  name        = "allow_ssh_mongo"
   description = "Allow ssh and mongo inbound traffic"
   vpc_id      = aws_default_vpc.default.id
 
@@ -58,12 +97,14 @@ data "aws_subnets" "subnets" {
   }
 }
 resource "aws_instance" "database" {
-  ami           = "ami-0592c673f0b1e7665"
-  instance_type = "t2.micro"
+  ami           = "ami-0799d612b35d4bd43"
+  instance_type = "t3.small"
   security_groups = [aws_security_group.database_sg.id]
   subnet_id = data.aws_subnets.subnets.ids[0]
   key_name = aws_key_pair.key_pair.key_name
+  user_data = file("${path.module}/firstboot.sh")
+  iam_instance_profile = aws_iam_instance_profile.database_profile.name
   tags = {
-    Name = database
+    Name = "database"
     }
   }
