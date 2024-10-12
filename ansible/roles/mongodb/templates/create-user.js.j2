@@ -1,0 +1,8 @@
+use $external
+db.dropUser("arn:aws:iam::{{ ansible_ec2_instance_identity_document_accountid }}:role/database_role")
+db.createUser(
+   {
+       user: "arn:aws:iam::{{ ansible_ec2_instance_identity_document_accountid }}:role/database_role",
+       roles: [{role: "readWrite", db: "go-mongodb"}]
+   }
+)

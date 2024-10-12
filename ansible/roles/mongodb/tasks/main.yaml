@@ -1,0 +1,53 @@
+- name: gather facts
+  amazon.aws.ec2_metadata_facts:
+    metadata_token_ttl_seconds: 240
+
+- name: print
+  debug:
+    msg: "{{ ansible_ec2_instance_identity_document_accountid }}"
+
+- name: Add repository
+  ansible.builtin.yum:
+    name: https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    state: present
+    disable_gpg_check: true
+
+- name: Enable Repo
+  ansible.builtin.command: percona-release enable psmdb-60 release
+
+- name: Install mongo
+  ansible.builtin.yum:
+    name: percona-server-mongodb 
+    state: present
+
+- name: start mongod
+  ansible.builtin.service:
+    name: mongod
+    state: started
+    enabled: true
+
+- name: load mongodb auth script
+  ansible.builtin.template:
+    src: create-user.js.j2
+    dest: /tmp/create-user.js
+    owner: root
+    group: wheel
+    mode: u=rw,g=r,o=r
+
+- name: add iam-role-user
+  ansible.builtin.command: mongosh < /tmp/create-user.js
+
+- name: reconfigure mongodb
+  ansible.builtin.copy:
+    src: files/mongod.conf
+    dest: /etc/mongod.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+
+- name: start mongod
+  ansible.builtin.service:
+    name: mongod
+    state: restarted
+    enabled: true
+
