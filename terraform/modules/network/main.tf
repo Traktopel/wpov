@@ -3,6 +3,9 @@ resource "aws_default_vpc" "default" {
     Name = "Default VPC"
   }
 }
+resource "aws_default_subnet" "default_az1" {
+  availability_zone = "eu-central-1a"
+}
 
 
 resource "aws_subnet" "priv1" {
@@ -29,7 +32,7 @@ resource "aws_eip" "natgw_pubip" {
 
 resource "aws_nat_gateway" "natgw" {
   allocation_id = aws_eip.natgw_pubip.id
-  subnet_id = aws_subnet.priv1.id
+  subnet_id = aws_default_subnet.default_az1.id
 }
 
 
@@ -52,56 +55,115 @@ resource "aws_route_table_association" "private_rt_asso2" {
   route_table_id = aws_route_table.private_route_table.id
 }
 
-resource "aws_eks_cluster" "example" {
-  name     = "example"
-  role_arn = aws_iam_role.example.arn
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "20.8.5"
 
-  vpc_config {
-    subnet_ids = [aws_subnet.priv1.id, aws_subnet.priv2.id]
+  cluster_name    = "eks"
+
+  cluster_endpoint_public_access           = true
+  cluster_endpoint_private_access          = true
+  enable_cluster_creator_admin_permissions = true
+
+  cluster_addons = {
+    eks-pod-identity-agent = {}
   }
 
-  # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
-  # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
-  depends_on = [
-    aws_iam_role_policy_attachment.example-AmazonEKSClusterPolicy,
-    aws_iam_role_policy_attachment.example-AmazonEKSVPCResourceController,
-  ]
+  vpc_id     = aws_default_vpc.default.id
+  subnet_ids = [aws_subnet.priv1.id,aws_subnet.priv2.id]
+
+  eks_managed_node_group_defaults = {
+    ami_type = "AL2_x86_64"
+
+  }
+
+  eks_managed_node_groups = {
+    one = {
+      name = "node-group-1"
+
+      instance_types = ["t3.small"]
+
+      min_size     = 1
+      max_size     = 3
+      desired_size = 2
+    }
+  }
+}
+
+
+data "aws_iam_policy" "ebs_csi_policy" {
+  arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+module "irsa-ebs-csi" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version = "5.39.0"
+
+  create_role                   = true
+  role_name                     = "AmazonEKSTFEBSCSIRole-${module.eks.cluster_name}"
+  provider_url                  = module.eks.oidc_provider
+  role_policy_arns              = [data.aws_iam_policy.ebs_csi_policy.arn]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
 }
 
 output "endpoint" {
-  value = aws_eks_cluster.example.endpoint
+  value = module.eks.cluster_arn
 }
 
-output "kubeconfig-certificate-authority-data" {
-  value = aws_eks_cluster.example.certificate_authority[0].data
-}
-
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["eks.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    command     = "aws"
   }
 }
 
-resource "aws_iam_role" "example" {
-  name               = "eks-cluster-example"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+#provider "helm" {
+#  kubernetes {
+#    host                   = module.eks.cluster_endpoint
+#    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+#    exec {
+#      api_version = "client.authentication.k8s.io/v1beta1"
+#      command     = "aws"
+#      args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+#    }
+#  }
+#}
+#
+resource "aws_ecr_repository" "repo" {
+  name                 = "repo"
+  image_tag_mutability = "MUTABLE"
 }
 
-resource "aws_iam_role_policy_attachment" "example-AmazonEKSClusterPolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.example.name
-}
-
-# Optionally, enable Security Groups for Pods
-# Reference: https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
-resource "aws_iam_role_policy_attachment" "example-AmazonEKSVPCResourceController" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
-  role       = aws_iam_role.example.name
+resource "aws_ecr_repository_policy" "repo_policy_attach" {
+  repository = aws_ecr_repository.repo.name
+  policy   = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid = "allowpublic"
+        Effect = "Allow"
+        Principal = "*"
+        Action = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:PutImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:DescribeRepositories",
+          "ecr:GetRepositoryPolicy",
+          "ecr:ListImages",
+          "ecr:DeleteRepository",
+          "ecr:BatchDeleteImage",
+          "ecr:SetRepositoryPolicy",
+          "ecr:DeleteRepositoryPolicy",
+        ]
+        
+      }
+    ]
+  }) 
 }

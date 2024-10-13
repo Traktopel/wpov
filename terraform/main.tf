@@ -17,3 +17,7 @@ provider "aws" {
 module "network" {
     source = "./modules/network"
 }
+
+output "arn" {
+    value = module.network.endpoint
+}
