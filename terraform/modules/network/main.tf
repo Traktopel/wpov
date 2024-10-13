@@ -107,8 +107,17 @@ module "irsa-ebs-csi" {
 }
 
 output "endpoint" {
-  value = module.eks.cluster_arn
+  value = module.eks.eks_managed_node_groups.one.iam_role_arn
 }
+
+data "aws_iam_policy" "regrw" {
+  arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess"
+}
+resource "aws_iam_role_policy_attachment" "write_ecr" {
+  role       = split("/", module.eks.eks_managed_node_groups.one.iam_role_arn)[1]
+  policy_arn = data.aws_iam_policy.regrw.arn
+}
+
 
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
@@ -147,20 +156,7 @@ resource "aws_ecr_repository_policy" "repo_policy_attach" {
         Effect = "Allow"
         Principal = "*"
         Action = [
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:PutImage",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:DescribeRepositories",
-          "ecr:GetRepositoryPolicy",
-          "ecr:ListImages",
-          "ecr:DeleteRepository",
-          "ecr:BatchDeleteImage",
-          "ecr:SetRepositoryPolicy",
-          "ecr:DeleteRepositoryPolicy",
+          "ecr:*"
         ]
         
       }
