@@ -97,7 +97,7 @@
     mode: u=rw,g=r,o=r
 
 - name: Enable pbm storage
-  ansible.builtin.command: pbm config --file /tmp/pbm-config.yaml
+  ansible.builtin.shell: pbm config --file /tmp/pbm-config.yaml --mongodb-uri='mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authMechanism=MONGODB-AWS&appName=mongosh+2.3.0'
 
 - name: start pbm-agent
   ansible.builtin.service:
