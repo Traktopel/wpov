@@ -39,6 +39,18 @@
   args:
     executable: /bin/bash
 
+- name: gen-key-mongo
+  ansible.builtin.shell: openssl rand -base64 756 > /etc/mongodb-keyfile
+  args:
+    executable: /bin/bash
+
+- name: change permission
+  ansible.builtin.file:
+    path: /etc/mongodb-keyfile
+    owner: mongod
+    group: mongod 
+    mode: '0400'
+
 - name: reconfigure mongodb
   ansible.builtin.copy:
     src: files/mongod.conf
