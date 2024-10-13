@@ -10,6 +10,10 @@ provider "aws" {
 #    source = "./modules/securityhub"
 #}
 
-module "database" {
-    source = "./modules/database"
+#module "database" {
+#    source = "./modules/database"
+#}
+
+module "network" {
+    source = "./modules/network"
 }
