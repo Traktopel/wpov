@@ -90,7 +90,7 @@
 
 - name: pbm config storage file
   ansible.builtin.template:
-    src: pbm-coonfig.yaml.j2
+    src: pbm-config.yaml.j2
     dest: /tmp/pbm-config.yaml
     owner: root
     group: wheel
