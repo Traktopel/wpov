@@ -65,6 +65,10 @@
     state: restarted
     enabled: true
 
+- name: Enable Repo
+  ansible.builtin.command: percona-release enable pbm release
+
+
 - name: Install pbm
   ansible.builtin.yum:
     name: percona-backup-mongodb
