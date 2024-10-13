@@ -75,7 +75,7 @@
     state: present
 
 - name: start rs
-  ansible.builtin.shell: mongosh < rs.initiate()
+  ansible.builtin.shell: echo rs.initiate\(\) | mongosh --authenticationMechanism=MONGODB-AWS --authenticationDatabase=$external
   args:
     executable: /bin/bash
 
