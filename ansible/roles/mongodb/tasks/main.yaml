@@ -102,9 +102,10 @@
 - name: start pbm-agent
   ansible.builtin.service:
     name: pbm-agent
-    state: restartd
+    state: started
     enabled: true
 
 - name: Enable pbm storage
-  ansible.builtin.command: pbm backup
+  ansible.builtin.command: pbm backup --mongodb-uri='mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authMechanism=MONGODB-AWS&appName=mongosh+2.3.0'
+
 
