@@ -1,8 +1,27 @@
 use $external
-db.dropUser("arn:aws:iam::{{ ansible_ec2_instance_identity_document_accountid }}:role/database_role")
+db.dropUser("arn:aws:iam::{{ ansible_ec2_instance_identity_document_accountid }}:role/app_role")
 db.createUser(
    {
-       user: "arn:aws:iam::{{ ansible_ec2_instance_identity_document_accountid }}:role/database_role",
+       user: "arn:aws:iam::{{ ansible_ec2_instance_identity_document_accountid }}:role/app_role",
        roles: [{role: "readWrite", db: "go-mongodb"}]
    }
 )
+
+db.getSiblingDB("admin").createRole({ "role": "pbmAnyAction",
+      "privileges": [
+         { "resource": { "anyResource": true },
+           "actions": [ "anyAction" ]
+         }
+      ],
+      "roles": []
+   });
+
+db.getSiblingDB("$external").createUser({user:  "arn:aws:iam::{{ ansible_ec2_instance_identity_document_accountid }}:role/database_role"
+       "roles" : [
+          { "db" : "admin", "role" : "readWrite", "collection": "" },
+          { "db" : "admin", "role" : "backup" },
+          { "db" : "admin", "role" : "clusterMonitor" },
+          { "db" : "admin", "role" : "restore" },
+          { "db" : "admin", "role" : "pbmAnyAction" }
+       ]
+    });

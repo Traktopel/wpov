@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "assume_role" {
 
 data "aws_iam_policy_document" "inline_policy" {
   statement {
-    actions = ["ec2:*"]
+    actions = ["ec2:*","s3:*"]
     resources = ["*"]
   }
 }
@@ -102,9 +102,76 @@ resource "aws_instance" "database" {
   security_groups = [aws_security_group.database_sg.id]
   subnet_id = data.aws_subnets.subnets.ids[0]
   key_name = aws_key_pair.key_pair.key_name
-  user_data = file("${path.module}/firstboot.sh")
+  user_data = templatefile("${path.module}/firstboot.sh",{bucket =  "${aws_s3_bucket.mongo_bucket.id}"})
   iam_instance_profile = aws_iam_instance_profile.database_profile.name
   tags = {
     Name = "database"
     }
   }
+  
+resource "aws_s3_bucket" "mongo_bucket" {
+  bucket_prefix = "mongobucket"
+
+}
+
+
+resource "aws_s3_bucket_ownership_controls" "mongo_bucket" {
+  bucket = aws_s3_bucket.mongo_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "mongo_bucket" {
+  bucket = aws_s3_bucket.mongo_bucket.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_acl" "mongo_bucket" {
+  depends_on = [
+    aws_s3_bucket_ownership_controls.mongo_bucket,
+    aws_s3_bucket_public_access_block.mongo_bucket,
+  ]
+
+  bucket = aws_s3_bucket.mongo_bucket.id
+    acl    = "public-read"
+}
+
+
+resource "aws_s3_bucket_policy" "allow_access_public" {
+  bucket = aws_s3_bucket.mongo_bucket.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid = "allowpublic"
+        Effect = "Allow"
+        Principal = "*"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = [
+          "${aws_s3_bucket.mongo_bucket.arn}/*"
+        ]
+      },
+      {
+        Sid = "allowmongorole"
+        Effect = "Allow"
+        Principal = {
+          AWS = "${aws_iam_role.database_role.arn}"
+        }
+        Action = [
+          "s3:*"
+        ]
+        Resource = [
+          "${aws_s3_bucket.mongo_bucket.arn}/*"
+        ]
+      }
+    ]
+  }) 
+}
+

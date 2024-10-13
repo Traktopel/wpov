@@ -53,3 +53,42 @@
     state: restarted
     enabled: true
 
+- name: Install pbm
+  ansible.builtin.yum:
+    name: percona-backup-mongodb
+    state: present
+
+- name: start rs
+  ansible.builtin.shell: mongosh < rs.initiate()
+  args:
+    executable: /bin/bash
+
+- name: pbm-config-url
+  ansible.builtin.copy:
+    src: files/pbm-agent
+    dest: /etc/sysconfig/pbm-agent
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=
+
+
+- name: pbm config storage file
+  ansible.builtin.template:
+    src: pbm-coonfig.yaml.j2
+    dest: /tmp/pbm-config.yaml
+    owner: root
+    group: wheel
+    mode: u=rw,g=r,o=r
+
+- name: Enable pbm storage
+  ansible.builtin.command: pbm config --file /tmp/pbm-config.yaml
+
+- name: start pbm-agent
+  ansible.builtin.service:
+    name: pbm-agent
+    state: restartd
+    enabled: true
+
+- name: Enable pbm storage
+  ansible.builtin.command: pbm backup
+
