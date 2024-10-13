@@ -16,7 +16,7 @@ db.getSiblingDB("admin").createRole({ "role": "pbmAnyAction",
       "roles": []
    });
 
-db.getSiblingDB("$external").createUser({user:  "arn:aws:iam::{{ ansible_ec2_instance_identity_document_accountid }}:role/database_role"
+db.getSiblingDB("$external").createUser({user:  "arn:aws:iam::{{ ansible_ec2_instance_identity_document_accountid }}:role/database_role",
        "roles" : [
           { "db" : "admin", "role" : "readWrite", "collection": "" },
           { "db" : "admin", "role" : "backup" },
