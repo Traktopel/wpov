@@ -92,34 +92,40 @@ resource "aws_security_group" "database_sg" {
   }
 }
 
-data "aws_subnets" "subnets" {
+
+
+data "aws_subnet" "specific_subnet" {
+  vpc_id = aws_default_vpc.default.id
   filter {
-    name   = "vpc-id"
-    values = [aws_default_vpc.default.id]
+    name   = "cidr-block"
+    values = ["172.31.16.0/20"]  # Replace with your specific IP range
   }
 }
 
-
+resource "aws_network_interface" "nic" {
+  subnet_id   = data.aws_subnet.specific_subnet.id
+  private_ips = ["172.31.24.23"]
+  security_groups = [aws_security_group.database_sg.id]
+}
 
 
 resource "aws_instance" "database" {
   ami           = "ami-0799d612b35d4bd43"
   instance_type = "t3.small"
-  security_groups = [aws_security_group.database_sg.id]
-  subnet_id = data.aws_subnets.subnets.ids[1]
   key_name = aws_key_pair.key_pair.key_name
   user_data = templatefile("${path.module}/firstboot.sh",{bucket =  "${aws_s3_bucket.mongo_bucket.id}", noderole = "${var.eks_node_role}"})
   iam_instance_profile = aws_iam_instance_profile.database_profile.name
   tags = {
     Name = "database"
     }
+  network_interface { 
+    network_interface_id = aws_network_interface.nic.id
+    device_index = 0
   }
-output "asd" {
-  value = var.eks_node_role
-}
-
+  }
+ 
 output "database_ip" {
-  value = aws_instance.database.private_ip
+  value = aws_instance.database.private_dns
 }
 
 

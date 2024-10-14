@@ -23,7 +23,7 @@ module "database" {
 
 module "kube"{
     source = "./modules/kube"
-    database_ip = module.database.database_ip
+    database_fqdn = module.database.database_ip
     kubernetes_endpoint=module.eks.eks_endpoint
     kubernetes_ca=module.eks.eks_ca
 }

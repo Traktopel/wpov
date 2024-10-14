@@ -1,4 +1,4 @@
-variable "database_ip" {
+variable "database_fqdn" {
 }
 variable "kubernetes_endpoint" {
 

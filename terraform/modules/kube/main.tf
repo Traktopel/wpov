@@ -9,6 +9,8 @@ provider "kubernetes" {
   }
 }
 
+
+
 provider "helm" {
   kubernetes {
     host                   = var.kubernetes_endpoint
