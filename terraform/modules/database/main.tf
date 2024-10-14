@@ -76,7 +76,7 @@ resource "aws_security_group" "database_sg" {
     from_port   = 27017
     to_port     = 27019
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [aws_default_vpc.default.cidr_block]
   }
 
   egress {
@@ -108,7 +108,12 @@ resource "aws_instance" "database" {
     Name = "database"
     }
   }
-  
+
+output "database_ip" {
+  value = aws_instance.database.private_ip
+}
+
+
 resource "aws_s3_bucket" "mongo_bucket" {
   bucket_prefix = "mongobucket"
 

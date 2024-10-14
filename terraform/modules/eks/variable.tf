@@ -1,0 +1,2 @@
+variable "database_ip" {
+}

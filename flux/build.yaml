@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kaniko
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    args: ["--dockerfile=Dockerfile",
+           "--context=git://github.com/Traktopel/wpov.git#refs/heads/main",
+           "--destination=418272768514.dkr.ecr.eu-central-1.amazonaws.com/repo:latest",
+           "--context-sub-path=tasky"]
+
+  restartPolicy: Never

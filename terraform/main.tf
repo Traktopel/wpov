@@ -2,22 +2,24 @@ provider "aws" {
     region = var.region
 }
 
-#module "awsconfig" {
-#    source = "./modules/awsconfig"
-#}
-
-#module "securityhub" {
-#    source = "./modules/securityhub"
-#}
-
-#module "database" {
-#    source = "./modules/database"
-#}
-
-module "network" {
-    source = "./modules/network"
+module "awsconfig" {
+    source = "./modules/awsconfig"
 }
 
-output "arn" {
-    value = module.network.endpoint
+module "securityhub" {
+    source = "./modules/securityhub"
 }
+
+module "database" {
+    source = "./modules/database"
+}
+
+output "ip" {
+  value = module.database.database_ip
+}
+
+module "eks" {
+    source = "./modules/eks"
+    database_ip = module.database.database_ip
+}
+
