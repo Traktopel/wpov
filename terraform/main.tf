@@ -10,16 +10,20 @@ module "securityhub" {
     source = "./modules/securityhub"
 }
 
-module "database" {
-    source = "./modules/database"
-}
-
-output "ip" {
-  value = module.database.database_ip
-}
-
 module "eks" {
     source = "./modules/eks"
-    database_ip = module.database.database_ip
 }
 
+
+module "database" {
+    source = "./modules/database"
+    eks_node_role=module.eks.node_role
+}
+
+
+module "kube"{
+    source = "./modules/kube"
+    database_ip = module.database.database_ip
+    kubernetes_endpoint=module.eks.eks_endpoint
+    kubernetes_ca=module.eks.eks_ca
+}

@@ -1,0 +1,1 @@
+variable "eks_node_role" {}

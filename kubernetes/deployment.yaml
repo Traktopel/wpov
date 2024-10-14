@@ -24,7 +24,6 @@ spec:
       labels:
         app: tasky
     spec:
-      serviceAccountName: tasky
       containers:
       - image: 418272768514.dkr.ecr.eu-central-1.amazonaws.com/repo:latest
         imagePullPolicy: Always
@@ -33,8 +32,6 @@ spec:
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         env:
-        - name: MONGODB_ACCESS_ROLE_ARN
-          value: "arn:aws:iam::418272768514:role/tasky_role"
         - name: MONGODB_URI
           value: "mongodb://database-svc:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authMechanism=MONGODB-AWS&appName=mongosh+2.3.0"
       dnsPolicy: ClusterFirst

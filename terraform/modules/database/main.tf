@@ -1,3 +1,5 @@
+
+
 resource "aws_iam_instance_profile" "database_profile" {
   name = "database_profile"
   role = aws_iam_role.database_role.name
@@ -96,18 +98,25 @@ data "aws_subnets" "subnets" {
     values = [aws_default_vpc.default.id]
   }
 }
+
+
+
+
 resource "aws_instance" "database" {
   ami           = "ami-0799d612b35d4bd43"
   instance_type = "t3.small"
   security_groups = [aws_security_group.database_sg.id]
-  subnet_id = data.aws_subnets.subnets.ids[0]
+  subnet_id = data.aws_subnets.subnets.ids[1]
   key_name = aws_key_pair.key_pair.key_name
-  user_data = templatefile("${path.module}/firstboot.sh",{bucket =  "${aws_s3_bucket.mongo_bucket.id}"})
+  user_data = templatefile("${path.module}/firstboot.sh",{bucket =  "${aws_s3_bucket.mongo_bucket.id}", noderole = "${var.eks_node_role}"})
   iam_instance_profile = aws_iam_instance_profile.database_profile.name
   tags = {
     Name = "database"
     }
   }
+output "asd" {
+  value = var.eks_node_role
+}
 
 output "database_ip" {
   value = aws_instance.database.private_ip

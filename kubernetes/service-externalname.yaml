@@ -4,4 +4,4 @@ metadata:
   name: database-svc
 spec:
   type: ExternalName
-  externalName: ip-172-31-29-217.eu-central-1.compute.internal
+  externalName: ip-172-31-25-100.eu-central-1.compute.internal

@@ -106,8 +106,14 @@ module "irsa-ebs-csi" {
   oidc_fully_qualified_subjects = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
 }
 
-output "endpoint" {
+output "node_role" {
   value = module.eks.eks_managed_node_groups.one.iam_role_arn
+}
+output "eks_ca" {
+  value = module.eks.cluster_certificate_authority_data
+}
+output "eks_endpoint" {
+  value = module.eks.cluster_endpoint
 }
 
 data "aws_iam_policy" "regrw" {
@@ -119,15 +125,15 @@ resource "aws_iam_role_policy_attachment" "write_ecr" {
 }
 
 
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-    command     = "aws"
-  }
-}
+#provider "kubernetes" {
+#  host                   = module.eks.cluster_endpoint
+#  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+#  exec {
+#    api_version = "client.authentication.k8s.io/v1beta1"
+#    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+#    command     = "aws"
+#  }
+#}
 
 
 resource "aws_ecr_repository" "repo" {
@@ -192,20 +198,20 @@ resource "aws_eks_pod_identity_association" "tasky_identity_association" {
 }
 
 
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-    }
-  }
-}
-
-resource "helm_release" "flux" {
-  name       = "flux"
-  repository = "https://fluxcd-community.github.io/helm-charts"
-  chart      = "flux2"
-}
+#provider "helm" {
+#  kubernetes {
+#    host                   = module.eks.cluster_endpoint
+#    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+#    exec {
+#      api_version = "client.authentication.k8s.io/v1beta1"
+#      command     = "aws"
+#      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+#    }
+#  }
+#}
+#
+#resource "helm_release" "flux" {
+#  name       = "flux"
+#  repository = "https://fluxcd-community.github.io/helm-charts"
+#  chart      = "flux2"
+#}

@@ -1,2 +1,0 @@
-variable "database_ip" {
-}
