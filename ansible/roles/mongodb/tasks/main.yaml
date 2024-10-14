@@ -108,4 +108,13 @@
 - name: Enable pbm storage
   ansible.builtin.command: pbm backup --mongodb-uri='mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authMechanism=MONGODB-AWS&appName=mongosh+2.3.0'
 
-
+- name: Set up cron job to run every 2 minutes
+  ansible.builtin.cron:
+    name: backup every 2 minutes
+    minute: "*/2"
+    hour: "*"
+    day: "*"
+    month: "*"
+    weekday: "*"
+    job: pbm backup --mongodb-uri='mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authMechanism=MONGODB-AWS&appName=mongosh+2.3.0'
+    user: "root"
