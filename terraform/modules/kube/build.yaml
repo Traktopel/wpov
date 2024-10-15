@@ -8,8 +8,8 @@ spec:
   - name: kaniko
     image: gcr.io/kaniko-project/executor:latest
     args: ["--dockerfile=Dockerfile",
-           "--context=git://github.com/Traktopel/wpov.git#refs/heads/main",
-           "--destination=418272768514.dkr.ecr.eu-central-1.amazonaws.com/repo:latest",
+           "--context=git://github.com/Traktopel/wpov.git#refs/heads/wpov-live",
+           "--destination=296062574090.dkr.ecr.eu-central-1.amazonaws.com/repo
            "--context-sub-path=tasky"]
 
   restartPolicy: Never
