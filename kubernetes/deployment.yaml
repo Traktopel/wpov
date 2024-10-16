@@ -31,9 +31,9 @@ spec:
         resources: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
-        env:
-        - name: MONGODB_URI
-          value: mongodb://database.svc:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authMechanism=MONGODB-AWS"
+      env:
+      - name: MONGODB_URI
+        value: mongodb://database.svc:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authMechanism=MONGODB-AWS"
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
