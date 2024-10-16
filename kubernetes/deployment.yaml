@@ -33,7 +33,7 @@ spec:
         terminationMessagePolicy: File
         env:
         - name: MONGODB_URI
-          value: "mongodb://database-svc:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authMechanism=MONGODB-AWS&appName=mongosh+2.3.0"
+          value: "mongodb://database-svc:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authMechanism=MONGODB-AWS&appName=tasky
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
