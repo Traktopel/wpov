@@ -3,8 +3,8 @@ resource "aws_default_vpc" "default" {
     Name = "Default VPC"
   }
 }
-resource "aws_default_subnet" "default_az1" {
-  availability_zone = "eu-central-1a"
+resource "aws_default_subnet" "default_az2" {
+  availability_zone = "eu-central-1b"
 }
 
 
@@ -32,7 +32,8 @@ resource "aws_eip" "natgw_pubip" {
 
 resource "aws_nat_gateway" "natgw" {
   allocation_id = aws_eip.natgw_pubip.id
-  subnet_id = aws_default_subnet.default_az1.id
+  subnet_id = aws_default_subnet.default_az2.id
+
 }
 
 
