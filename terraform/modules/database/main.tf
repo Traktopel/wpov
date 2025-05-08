@@ -110,7 +110,7 @@ resource "aws_network_interface" "nic" {
 
 
 resource "aws_instance" "database" {
-  ami           = "ami-0799d612b35d4bd43"
+  ami           = "ami-009082a6cd90ccd0e"
   instance_type = "t3.small"
   key_name = aws_key_pair.key_pair.key_name
   user_data = templatefile("${path.module}/firstboot.sh",{bucket =  "${aws_s3_bucket.mongo_bucket.id}", noderole = "${var.eks_node_role}"})
